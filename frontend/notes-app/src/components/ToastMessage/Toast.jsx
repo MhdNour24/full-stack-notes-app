@@ -10,7 +10,7 @@ function Toast({ isShown, message, type }) {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       handleCloseToast();
-    }, 2000);
+    }, 2000);   
 
     return () => {
       clearTimeout(timeoutId);
