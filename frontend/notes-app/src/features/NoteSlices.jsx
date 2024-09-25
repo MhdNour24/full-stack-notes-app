@@ -3,7 +3,7 @@ import { ModalContext } from "../context/ModalContext";
 import axiosInstance from "../utils/axiosInstace";
 export const addNewNote = createAsyncThunk(
   "notes/addNewNote",
-  async ({ noteData, onClose ,showToastMessage}) => {
+  async ({ noteData, onClose, showToastMessage }) => {
     try {
       const response = await axiosInstance.post("/api/notes", {
         title: noteData.title,
@@ -32,7 +32,7 @@ export const addNewNote = createAsyncThunk(
 
 export const editNote = createAsyncThunk(
   "notes/editNote",
-  async ({ noteId, data, onClose,showToastMessage }) => {
+  async ({ noteId, data, onClose, showToastMessage }) => {
     try {
       const response = await axiosInstance.put("/api/notes/" + noteId, {
         title: data.title,
@@ -66,7 +66,7 @@ export const deleteNote = createAsyncThunk(
     try {
       const response = await axiosInstance.delete("/api/notes/" + noteId);
       if (response.data && !response.data.error) {
-          action.showToastMessage("Note Deleted Successfully", "delete");
+        action.showToastMessage("Note Deleted Successfully", "delete");
         try {
           const result = await axiosInstance.get("/api/notes");
           if (result.data && result.data.notes) {
@@ -92,39 +92,39 @@ export const deleteNote = createAsyncThunk(
 );
 
 export const updateIsPinned = createAsyncThunk(
-    "notes/updateIsPinned",
-    async (action) => {
-      const noteId = action.noteData._id; // تأكد من قراءة الـ ID بشكل صحيح
-      try {
-        const response = await axiosInstance.patch("/api/notes/" + noteId, {
-          isPinned: !action.noteData.isPinned, // تعديل هنا لتعمل مع action.noteData
-        });
-        if (response.data && response.data.note) {
-          action.showToastMessage("Note Updated Successfully", "edit");
-          try {
-            const result = await axiosInstance.get("/api/notes");
-            if (result.data && result.data.notes) {
-              return { allNotes: result.data.notes, error: "" };
-            }
-          } catch (error) {
-            return { allNotes: [], error: error.message };
+  "notes/updateIsPinned",
+  async (action) => {
+    const noteId = action.noteData._id; // تأكد من قراءة الـ ID بشكل صحيح
+    try {
+      const response = await axiosInstance.patch("/api/notes/" + noteId, {
+        isPinned: !action.noteData.isPinned, // تعديل هنا لتعمل مع action.noteData
+      });
+      if (response.data && response.data.note) {
+        action.showToastMessage("Note Updated Successfully", "edit");
+        try {
+          const result = await axiosInstance.get("/api/notes");
+          if (result.data && result.data.notes) {
+            return { allNotes: result.data.notes, error: "" };
           }
-        }
-      } catch (error) {
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message
-        ) {
-          return {
-            allNotes: [],
-            error: "An unexpected error occurred. Please try again",
-          };
+        } catch (error) {
+          return { allNotes: [], error: error.message };
         }
       }
+    } catch (error) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        return {
+          allNotes: [],
+          error: "An unexpected error occurred. Please try again",
+        };
+      }
     }
-  );
-  
+  }
+);
+
 export const onSearchNote = createAsyncThunk(
   "notes/onSearchNote",
   async (action) => {
@@ -143,6 +143,7 @@ export const onSearchNote = createAsyncThunk(
 );
 export const getAllNotes = createAsyncThunk("/notes/getAllNotes", async () => {
   try {
+    console.log("getAllNotes")
     const response = await axiosInstance.get("/api/notes");
     if (response.data && response.data.notes) {
       return { allNotes: response.data.notes, error: "" };
@@ -154,12 +155,36 @@ export const getAllNotes = createAsyncThunk("/notes/getAllNotes", async () => {
     };
   }
 });
+export const getUserInfo = createAsyncThunk("notes/getUserInfo", async () => {
+  try {
+    console.log("getUserInfo")
+    const response = await axiosInstance.get("/api/users");
+    if (response.data && response.data.user) {
+      return { user: response.data.user ,error:""};
+    }
+  } catch (error) {
+      return { error: error.message, user: null, allNotes: [],token: null };
+  }
+});
+
 const notesSlice = createSlice({
   name: "notes",
   initialState: {
     allNotes: [],
+    token: null, // Add token to the initial state
+    user: null, // Add user to the initial state
     error: "",
     loading: false,
+  },
+  reducers: {
+    setToken(state, action) {
+      state.token = action.payload.token; // Set token action
+    },
+    setLogout: (state) => {
+      state.token = null;
+      state.allNotes = [];
+      state.user = null;
+    },
   },
   extraReducers(builder) {
     builder
@@ -234,8 +259,26 @@ const notesSlice = createSlice({
       .addCase(getAllNotes.rejected, (state, action) => {
         state.error = action.error.message;
         state.loading = false;
-      });
+      })
+
+      .addCase(getUserInfo.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getUserInfo.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.error = action.payload.error;
+        state.loading = false;
+      })
+      .addCase(getUserInfo.rejected, (state, action) => {
+        state.error = action.error.message;
+        state.user=null;
+        state.allNotes=[];
+        state.token=null;
+        state.loading = false;
+      })
   },
 });
+
+export const { setToken, setLogout } = notesSlice.actions;
 
 export default notesSlice.reducer;
