@@ -6,17 +6,20 @@ import ErrorPage from "./pages/Error/ErrorPage";
 // Fixed import from ToastProvider instead of ToastPorvider
 import { ToastProvider } from "./context/ToastContext";
 import { ModalProvider } from "./context/ModalContext";
+import { useSelector } from "react-redux";
 
 function App() {
+  const isAuth = Boolean(useSelector((state) => state.notes.token));
+  
   return (
-    <div>
+    <div> 
       <ToastProvider>
         <ModalProvider>
           <Routes>
-            <Route path="/dashboard" exact element={<Home />} />
-            <Route path="/login" exact element={<Login />} />
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="/signUp" exact element={<SignUp />} />
+            <Route path="/dashboard"  element={isAuth ? <Home /> :<Login />} />
+            <Route path="/login"  element={!isAuth ? <Login />:<Navigate to="/dashboard" /> }  />
+            <Route path="/" element={isAuth ? <Navigate to="/dashboard" /> :<Navigate to="/login" />} />
+            <Route path="/signUp"  element={!isAuth ? <SignUp /> :  <Navigate to="/dashboard" /> } />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
         </ModalProvider>
