@@ -9,14 +9,18 @@ import { useNavigate } from "react-router-dom";
 import ProfileInfo from "../Cards/ProfileInfo";
 import SearchBar from "../SearchBar/SearchBar";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { setLogout} from "../../features/NoteSlices"
 
 function NavBar({userInfo,onSearchNote,handleClearSearch,disabledPage}) {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const dispatch =useDispatch()
   const onLogout = () => {
-    localStorage.clear();
+    dispatch(setLogout());
     navigate("/login");
   };
+  
   const handleSearch = () => {
     if(searchQuery) {
       onSearchNote(searchQuery)
