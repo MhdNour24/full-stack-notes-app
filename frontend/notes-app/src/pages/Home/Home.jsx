@@ -3,7 +3,6 @@ import NoteCard from "../../components/Cards/NoteCard";
 import AddIcon from "@mui/icons-material/Add";
 import AddEditNotes from "./AddEditNotes";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstace";
 import NavBar from "../../components/NavBar/NavBar";
 import UserBanner from "../../components/Input/UserBanner";
@@ -13,7 +12,6 @@ import EmptyCard from "../../components/Cards/EmptyCard";
 import addNoteImg from "../../assets/images/add_note.png";
 import ShowOrNot from "../../utils/showOrNot";
 import { useContext } from "react";
-import CircularProgress from "../../components/Progresses/CircularProgress"
 import { ToastContext } from "../../context/ToastContext";
 import { ModalContext } from "../../context/ModalContext";
 // redux import
@@ -23,17 +21,20 @@ import {
   onSearchNote,
   updateIsPinned,
   getAllNotes,
+  setToken,
+  setLogout,
+  getUserInfo,
 } from "../../features/NoteSlices";
 
 function Home() {
   const dispatch = useDispatch();
-  const isLoading=useSelector((state)=>{
-    return state.notes.loading
-  })
-  const allNotes=useSelector((state)=>{
-    return state.notes.allNotes
-  })
-  const {  setOpenAddEditNotes } = useContext(ModalContext);
+
+  const allNotes = useSelector((state) => {
+    return state.notes.allNotes;
+  });
+  const userInfo = useSelector((state) => state.notes.user);
+
+  const { setOpenAddEditNotes } = useContext(ModalContext);
   const [isSearch, setIsSearch] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState("pulse");
   const { handleCloseToast, showToastMessage } = useContext(ToastContext);
@@ -46,26 +47,9 @@ function Home() {
     setOpenAddEditNotes({ isshown: true, data: noteDetails, type: "edit" });
   };
 
-  const [userInfo, setUserInfo] = useState(null);
-  const navigate = useNavigate();
-
-  const getUserInfo = async () => {
-    try {
-      const response = await axiosInstance.get("/api/users");
-      if (response.data && response.data.user) {
-        setUserInfo(response.data.user);
-      }
-    } catch (error) {
-      if (error.response.status === 401) {
-        localStorage.clear();
-        navigate("/login");
-      }
-    }
-  };
-
   //  delete note
-  const deleteNoteFunc =  (data) => {
-    dispatch(deleteNote({ data: data,showToastMessage }));
+  const deleteNoteFunc = (data) => {
+    dispatch(deleteNote({ data: data, showToastMessage }));
   };
   const onSearchNoteFunc = (query) => {
     dispatch(onSearchNote({ query: query }));
@@ -74,14 +58,23 @@ function Home() {
     setIsSearch(false);
     dispatch(getAllNotes());
   };
+  // useEffect(() => {
+  //   console.log("useEffect called");
+  //   dispatch(getAllNotes());
+  //   dispatch(getUserInfo());
+  // }, []);
   useEffect(() => {
-    console.log("useEffect called");
-    dispatch(getAllNotes());
-    getUserInfo();
-  }, []);
+    if (!allNotes || allNotes.length === 0) {
+      dispatch(getAllNotes()); // فقط في حالة عدم وجود ملاحظات
+    }
 
-  const updateIsPinnedFunc =  (noteData) => {
-    dispatch(updateIsPinned({ noteData ,showToastMessage}));
+    if (!userInfo) {
+      dispatch(getUserInfo()); // فقط في حالة عدم وجود بيانات المستخدم
+    }
+  }, [dispatch, allNotes, userInfo]);
+
+  const updateIsPinnedFunc = (noteData) => {
+    dispatch(updateIsPinned({ noteData, showToastMessage }));
   };
   return (
     <>
