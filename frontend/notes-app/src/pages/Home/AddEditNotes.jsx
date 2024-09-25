@@ -9,7 +9,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { ToastContext } from "../../context/ToastContext";
 import { ModalContext } from "../../context/ModalContext";
 // redux import 
-import {useSelector,useDispatch} from "react-redux"
+import {useDispatch} from "react-redux"
 import { addNewNote,editNote } from "../../features/NoteSlices";
 
 const AddEditNotes = ({ noteData, type }) => {
