@@ -17,14 +17,15 @@ import { validateEmail } from "../../utils/helper";
 import NavBar from "../../components/NavBar/NavBar"
 // others
 import axiosInstance from "../../utils/axiosInstace"
+import {useDispatch} from "react-redux"
+import { setToken } from "../../features/NoteSlices";
 
 function SignUp() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [data, setData] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState(null);
-  const handlingErrorMessage = () => {
-    return;
-  };
+
   const changingEmail = (e) => {
     setData({ ...data, email: e.target.value });
   };
@@ -54,7 +55,7 @@ function SignUp() {
       const response=await axiosInstance.post("/api/users/create-account",{fullName:data.name,email:data.email,password:data.password})
       // handle successful registration response
       if(response.data && response.data.accessToken) {
-        localStorage.setItem("token",response.data.accessToken)
+        dispatch(setToken({token:response.data.accessToken}))
         navigate("/dashboard")
       }
 
