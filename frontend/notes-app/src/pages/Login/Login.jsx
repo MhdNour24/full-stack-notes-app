@@ -15,11 +15,15 @@ import { useState } from "react";
 import Input from "../../components/Input/Input";
 import { validateEmail } from "../../utils/helper";
 import NavBar from "../../components/NavBar/NavBar"
+import {useDispatch,useSelector} from "react-redux"
+import { setToken } from "../../features/NoteSlices";
 
 // others
 import axiosInstance from "../../utils/axiosInstace"
+import store from "../../store"
 
 function Login() {
+  const dispatch=useDispatch()
   const [data, setData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -32,6 +36,9 @@ function Login() {
   };
   const handleLogin = async (e) => {
     e.preventDefault();
+    const state= store.getState().notes;
+
+
     if (!validateEmail(data.email)) {
       console.log(data.email);
       setError("please enter a valid email address");
@@ -41,7 +48,6 @@ function Login() {
       setError("please enter the password");
       return;
     }
-    // setError("")
     // login api call
     try {
       const response= await axiosInstance.post("/api/users/login",{email:data.email,password:data.password})
@@ -51,7 +57,7 @@ function Login() {
         return;
       }
       if(response.data && response.data.accessToken){
-        localStorage.setItem("token", response.data.accessToken)
+        dispatch(setToken({token: response.data.accessToken}))
         navigate("/dashboard")
       }
     } catch (error) {
@@ -59,7 +65,7 @@ function Login() {
       if(error.response && error.response.data && error.response.data.message) {
         setError(error.response.data.message)
       }else{ 
-        setError("An unexpected error occurred. Please try again")
+        setError(error.message)
       }
     }
   };
